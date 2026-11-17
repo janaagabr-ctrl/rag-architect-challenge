@@ -6,6 +6,10 @@ A 10-question quiz on Retrieval-Augmented Generation fundamentals, used as the f
 
 QR codes for the live URL are in [`qr/`](qr/) (PNG at 1230 × 1230, plus SVG).
 
+## How it works
+
+As soon as a participant picks an answer it locks, the correct option is highlighted, and the explanation appears. The final score is shown after they submit on the review screen.
+
 ## Stack
 
 React + TypeScript + Vite with plain CSS. React APIs are served by `preact/compat` at build time, so the whole site ships as one self-contained ~45 KB `docs/index.html`. It's fully static: no backend, no sign-in, no external API calls, and no personal data collected. In-progress answers are kept in `sessionStorage` so an accidental refresh doesn't lose them; Restart clears them.
@@ -21,7 +25,7 @@ npm run build    # writes docs/index.html
 
 ## Update the questions and redeploy
 
-1. Edit `src/questions.ts`. Each question has `id`, `question`, `options`, `correctAnswer`, `points` and `explanation`. Score titles and thresholds are in `src/scoring.ts`; keep `src/scoring.test.ts` in step.
+1. Edit `src/questions.ts`. Each question has `id`, `topic`, `context` (paragraphs, quotes or a bullet list shown above the question), `question`, `options`, `correctAnswer`, `points` and `explanation`. Wrap text in `backticks` to show it as code. Score titles and thresholds are in `src/scoring.ts`; keep `src/scoring.test.ts` in step.
 2. Rebuild and publish:
 
 ```bash

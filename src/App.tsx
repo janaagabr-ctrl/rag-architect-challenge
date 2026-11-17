@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { questions, SCENARIO, type OptionKey } from './questions';
+import { questions, SCENARIO, type ContextBlock, type OptionKey } from './questions';
 import { calculateResult, maxPoints, type Answers } from './scoring';
 
 type Screen = 'welcome' | 'quiz' | 'review' | 'results' | 'answers';
@@ -11,7 +11,7 @@ interface PersistedState {
   submitted: boolean;
 }
 
-const STORAGE_KEY = 'rag-architect-challenge:v1';
+const STORAGE_KEY = 'rag-architect-challenge:v2';
 const TOTAL = questions.length;
 const MAX_POINTS = maxPoints(questions);
 
@@ -58,6 +58,26 @@ function clearState() {
   }
 }
 
+/** Renders text, turning `backtick` segments into inline code. */
+function Rich({ text }: { text: string }) {
+  const parts = text.split('`');
+  return <>{parts.map((p, i) => (i % 2 === 1 ? <code key={i}>{p}</code> : p))}</>;
+}
+
+function Context({ blocks }: { blocks: ContextBlock[] }) {
+  return (
+    <div className="q-context">
+      {blocks.map((b, i) =>
+        b.type === 'list' ? (
+          <ul key={i} className="q-list">{b.items.map((it) => <li key={it}><Rich text={it} /></li>)}</ul>
+        ) : (
+          <p key={i} className={b.type === 'quote' ? 'q-quote' : 'q-part'}><Rich text={b.text} /></p>
+        ),
+      )}
+    </div>
+  );
+}
+
 function Brand() {
   return (
     <header className="site-header">
@@ -79,6 +99,8 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const focusFeedback = useRef(false);
   const firstRender = useRef(true);
 
   const { screen, current, answers, submitted } = state;
@@ -98,6 +120,14 @@ export default function App() {
     window.scrollTo({ top: 0 });
   }, [screen, current]);
 
+  // After an answer is chosen, move focus to the feedback so keyboard and screen-reader users land on it.
+  useLayoutEffect(() => {
+    if (!focusFeedback.current) return;
+    focusFeedback.current = false;
+    feedbackRef.current?.focus({ preventScroll: true });
+    feedbackRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [answers]);
+
   const go = (patch: Partial<PersistedState>) => setState((s) => ({ ...s, ...patch }));
 
   const start = () => {
@@ -105,10 +135,13 @@ export default function App() {
     go({ screen: 'quiz', current: 0 });
   };
 
+  // Each question can be answered once: the choice locks and its feedback is shown.
   const select = (qid: number, key: OptionKey) => {
-    if (submitted) return;
-    setState((s) => ({ ...s, answers: { ...s.answers, [qid]: key } }));
-    setAnnouncement(`Answer ${key} selected for question ${qid}.`);
+    if (submitted || answers[qid]) return;
+    const q = questions.find((x) => x.id === qid)!;
+    focusFeedback.current = true;
+    setState((s) => (s.answers[qid] ? s : { ...s, answers: { ...s.answers, [qid]: key } }));
+    setAnnouncement(key === q.correctAnswer ? `Answer ${key} is correct.` : `Answer ${key} is incorrect. The correct answer is ${q.correctAnswer}.`);
   };
 
   const openConfirm = () => {
@@ -158,7 +191,8 @@ export default function App() {
                 <li><strong>{MAX_POINTS}</strong> total points</li>
                 <li>Approximately <strong>8</strong> minutes</li>
                 <li>One correct answer per question</li>
-                <li>Score shown immediately after submission</li>
+                <li>Instant feedback and an explanation after each answer</li>
+                <li>Final score shown when you submit</li>
               </ul>
             </div>
             <div className="actions">
@@ -190,38 +224,52 @@ export default function App() {
                 <div className="progress-fill" style={{ width: `${progress}%` }} />
               </div>
               <p className="selection-state">
-                {selected ? <>Selected answer: <strong>{selected}</strong></> : 'No answer selected yet'}
+                {selected ? <>Your answer: <strong>{selected}</strong></> : 'Choose an answer. Your choice is final.'}
               </p>
 
-              <fieldset className="question" key={q.id}>
-                <legend>
-                  <h1 id="q-heading" ref={headingRef} tabIndex={-1} className="q-text">
-                    {q.question.split('\n\n').map((part, i) => (
-                      <span key={i} className={part.startsWith('“') ? 'q-quote' : 'q-part'}>{part}</span>
-                    ))}
-                  </h1>
-                </legend>
-                <div className="options">
+              <div className="question" key={q.id}>
+                <p className="q-topic">{q.topic}</p>
+                <Context blocks={q.context} />
+                <h1 id="q-heading" ref={headingRef} tabIndex={-1} className="q-text"><Rich text={q.question} /></h1>
+                <div className="options" role="group" aria-labelledby="q-heading">
                   {q.options.map((o) => {
-                    const id = `q${q.id}-${o.key}`;
                     const isSel = selected === o.key;
+                    const isRight = o.key === q.correctAnswer;
+                    const state = !selected ? '' : isRight ? ' is-correct' : isSel ? ' is-incorrect' : ' is-dim';
+                    const status = !selected ? '' : isRight ? (isSel ? 'Your answer, correct' : 'Correct answer') : isSel ? 'Your answer, incorrect' : '';
                     return (
-                      <label key={o.key} htmlFor={id} className={`option${isSel ? ' selected' : ''}`}>
-                        <input
-                          type="radio"
-                          id={id}
-                          name={`q${q.id}`}
-                          value={o.key}
-                          checked={isSel}
-                          onChange={() => select(q.id, o.key)}
-                        />
-                        <span className="option-key" aria-hidden="true">{o.key}</span>
-                        <span className="option-text"><span className="sr-only">{o.key}. </span>{o.text}</span>
-                      </label>
+                      <button
+                        key={o.key}
+                        type="button"
+                        id={`q${q.id}-${o.key}`}
+                        className={`option${isSel ? ' selected' : ''}${state}`}
+                        onClick={() => select(q.id, o.key)}
+                        disabled={Boolean(selected)}
+                        aria-pressed={isSel}
+                      >
+                        <span className="option-key" aria-hidden="true">{selected && (isRight ? '\u2713' : isSel ? '\u2717' : o.key) || o.key}</span>
+                        <span className="option-text">
+                          <span className="sr-only">{o.key}. </span><Rich text={o.text} />
+                          {status && <span className="option-status">{status}</span>}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
-              </fieldset>
+
+                {selected && (
+                  <div
+                    ref={feedbackRef}
+                    tabIndex={-1}
+                    className={`feedback ${selected === q.correctAnswer ? 'feedback-correct' : 'feedback-incorrect'}`}
+                  >
+                    <p className="feedback-verdict">
+                      {selected === q.correctAnswer ? 'Correct!' : <>Incorrect. The correct answer is <strong>{q.correctAnswer}</strong>.</>}
+                    </p>
+                    <p className="feedback-explanation"><Rich text={q.explanation} /></p>
+                  </div>
+                )}
+              </div>
 
               <div className="nav">
                 <button type="button" className="btn btn-secondary" onClick={() => go({ current: current - 1 })} disabled={current === 0}>
@@ -237,7 +285,7 @@ export default function App() {
                   </button>
                 )}
               </div>
-              {!selected && <p className="hint">Select an answer to continue.</p>}
+              {!selected && <p className="hint">Choose an answer to continue.</p>}
             </section>
           );
         })()}
@@ -247,23 +295,24 @@ export default function App() {
             <h1 id="review-heading" ref={headingRef} tabIndex={-1}>Review your answers</h1>
             <p className="subtitle">
               {allAnswered
-                ? 'All questions are answered. Select a question number to change an answer, or submit the quiz.'
+                ? 'All questions are answered. Select a question number to look at it again, or submit to see your final score.'
                 : `${TOTAL - answeredCount} of ${TOTAL} questions are unanswered. Answer every question before submitting.`}
             </p>
             <hr className="rule" />
             <ol className="review-grid">
               {questions.map((q, i) => {
                 const a = answers[q.id];
+                const ok = a === q.correctAnswer;
                 return (
                   <li key={q.id}>
                     <button
                       type="button"
-                      className={`review-item${a ? ' answered' : ' unanswered'}`}
+                      className={`review-item${a ? (ok ? ' answered right' : ' answered wrong') : ' unanswered'}`}
                       onClick={() => go({ screen: 'quiz', current: i })}
-                      aria-label={`Question ${q.id}: ${a ? `answer ${a} selected` : 'unanswered'}. Go to question.`}
+                      aria-label={`Question ${q.id}: ${a ? `answer ${a}, ${ok ? 'correct' : 'incorrect'}` : 'unanswered'}. Go to question.`}
                     >
                       <span className="review-num">{q.id}</span>
-                      <span className="review-status">{a ? `Answer ${a}` : 'Unanswered'}</span>
+                      <span className="review-status">{a ? `${ok ? '\u2713' : '\u2717'} Answer ${a}` : 'Unanswered'}</span>
                     </button>
                   </li>
                 );
@@ -326,27 +375,27 @@ export default function App() {
                 return (
                   <li key={q.id} className={`card answer-card ${i % 2 === 0 ? 'card-grey' : 'card-tint'}`}>
                     <div className="answer-head">
-                      <h2 className="answer-q">Question {q.id}</h2>
+                      <h2 className="answer-q">Question {q.id} <span className="answer-topic">· {q.topic}</span></h2>
                       <span className={`badge ${isCorrect ? 'badge-correct' : 'badge-incorrect'}`}>
                         {isCorrect ? 'Correct' : 'Incorrect'}
                       </span>
                     </div>
-                    <p className="answer-qtext">{q.question}</p>
+                    <p className="answer-qtext"><Rich text={q.question} /></p>
                     <dl className="answer-details">
                       <div><dt>Point value</dt><dd>{q.points}</dd></div>
                       <div>
                         <dt>Your answer</dt>
-                        <dd className={isCorrect ? 'text-correct' : 'text-incorrect'}>{chosen}. {chosenText}</dd>
+                        <dd className={isCorrect ? 'text-correct' : 'text-incorrect'}>{chosen}. <Rich text={chosenText ?? ''} /></dd>
                       </div>
                       <div>
                         <dt>Correct answer</dt>
-                        <dd className="text-correct">{q.correctAnswer}. {correctText}</dd>
+                        <dd className="text-correct">{q.correctAnswer}. <Rich text={correctText ?? ''} /></dd>
                       </div>
                       <div><dt>Points earned</dt><dd>{isCorrect ? q.points : 0} of {q.points}</dd></div>
                     </dl>
                     <div className="explanation">
                       <h3>Explanation</h3>
-                      <p>{q.explanation}</p>
+                      <p><Rich text={q.explanation} /></p>
                     </div>
                   </li>
                 );

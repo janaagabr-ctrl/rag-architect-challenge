@@ -17,6 +17,12 @@ describe('quiz data', () => {
   it('totals 10 points', () => expect(maxPoints(questions)).toBe(10));
 });
 
+describe('answer key', () => {
+  it('matches the answer key from the brief', () => {
+    expect(questions.map((q) => q.correctAnswer).join('')).toBe('BBBABBBADB');
+  });
+});
+
 describe('scoring', () => {
   it('all correct = 10/10, 100%, RAG Architect', () => {
     const r = calculateResult(questions, allCorrect);
