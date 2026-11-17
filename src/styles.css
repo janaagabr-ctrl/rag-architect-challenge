@@ -1,0 +1,236 @@
+:root {
+  --pwc-orange: #FD5108;
+  --pwc-orange-dark: #D04A02;
+  --pwc-orange-deep: #E0301E;
+  --pwc-peach: #FCE2D2;
+  --pwc-orange-tint: #FFF0E7;
+  --pwc-light-grey: #F2F2F2;
+  --pwc-medium-grey: #7D7D7D;
+  --pwc-dark-grey: #2D2D2D;
+  --pwc-black: #000000;
+  --pwc-white: #FFFFFF;
+  --success-green: #2E7D32;
+  --error-red: #C62828;
+
+  /* #7D7D7D on white is ~4.1:1, so secondary text at small sizes uses dark grey to stay AA. */
+  --text-secondary: #5E5E5E;
+  --radius: 3px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: Arial, Helvetica, sans-serif;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--pwc-white);
+  color: var(--pwc-black);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; color: var(--pwc-black); margin: 0; }
+h1 { font-size: 42px; line-height: 1.15; }
+h1:focus { outline: none; }
+h1:focus-visible { outline: 3px solid var(--pwc-orange); outline-offset: 4px; }
+p { margin: 0; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: 12px; top: -48px; z-index: 10;
+  background: var(--pwc-black); color: var(--pwc-white); padding: 10px 14px; font-weight: 700;
+}
+.skip-link:focus { top: 12px; }
+
+/* ---------- Header / brand ---------- */
+.site-header {
+  border-bottom: 1px solid var(--pwc-light-grey);
+  padding: 18px 24px;
+}
+.brand { display: flex; align-items: flex-end; gap: 10px; max-width: 832px; margin: 0 auto; }
+.brand-accent { display: inline-flex; align-items: flex-end; gap: 2px; height: 20px; }
+.brand-accent span { display: block; width: 7px; background: var(--pwc-orange); }
+.brand-accent span:nth-child(1) { height: 8px; }
+.brand-accent span:nth-child(2) { height: 14px; }
+.brand-accent span:nth-child(3) { height: 20px; }
+.brand-text { font-family: var(--sans); font-weight: 700; font-size: 15px; letter-spacing: 0.01em; line-height: 1; }
+
+/* ---------- Layout ---------- */
+.container {
+  flex: 1;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px 24px 56px;
+}
+
+.eyebrow {
+  font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--pwc-orange-dark); margin-bottom: 10px;
+}
+.subtitle { font-size: 17px; color: var(--text-secondary); margin-top: 12px; max-width: 62ch; }
+.rule { border: 0; border-top: 2px solid var(--pwc-orange); width: 64px; margin: 28px 0; }
+
+.card {
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--pwc-orange);
+}
+.card-grey { background: var(--pwc-light-grey); }
+.card-tint { background: var(--pwc-orange-tint); }
+.card-title { font-size: 22px; margin-bottom: 8px; }
+.info-list { margin: 0; padding-left: 20px; }
+.info-list li { margin: 2px 0; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: var(--sans); font-size: 16px; font-weight: 700;
+  min-height: 46px; padding: 12px 24px;
+  border-radius: var(--radius); border: 2px solid transparent;
+  cursor: pointer; transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+/* White on #FD5108 is below 4.5:1, so primary buttons use black text on the brand orange. */
+.btn-primary { background: var(--pwc-orange); color: var(--pwc-black); border-color: var(--pwc-orange); }
+.btn-primary:hover:not(:disabled) { background: var(--pwc-orange-dark); border-color: var(--pwc-orange-dark); color: var(--pwc-white); }
+.btn-secondary { background: var(--pwc-white); color: var(--pwc-black); border-color: var(--pwc-dark-grey); }
+.btn-secondary:hover:not(:disabled) { background: var(--pwc-light-grey); }
+.btn:disabled { cursor: not-allowed; background: var(--pwc-light-grey); border-color: var(--pwc-light-grey); color: #6B6B6B; }
+.btn:focus-visible,
+.review-item:focus-visible { outline: 3px solid var(--pwc-black); outline-offset: 3px; }
+
+/* ---------- Quiz ---------- */
+.quiz-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.q-counter { font-size: 14px; font-weight: 700; }
+.q-meta { font-size: 13px; color: var(--text-secondary); }
+.progress { height: 6px; background: var(--pwc-light-grey); margin: 10px 0 10px; border-radius: 1px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--pwc-orange); transition: width 0.2s ease; }
+.selection-state { font-size: 13px; color: var(--text-secondary); margin-bottom: 26px; }
+
+.question { border: 0; padding: 0; margin: 0; min-width: 0; }
+.question legend { padding: 0; margin-bottom: 22px; width: 100%; }
+.q-text { font-size: 24px; line-height: 1.35; }
+.q-part, .q-quote { display: block; }
+.q-part + .q-quote, .q-quote + .q-part { margin-top: 14px; }
+.q-quote {
+  font-family: var(--sans); font-size: 16px; line-height: 1.55;
+  background: var(--pwc-light-grey); border-left: 3px solid var(--pwc-orange); padding: 14px 16px;
+}
+
+.options { display: grid; gap: 12px; }
+.option {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 18px; min-height: 60px;
+  background: var(--pwc-white);
+  border: 2px solid #CFCFCF; border-radius: var(--radius);
+  cursor: pointer; font-size: 17px; line-height: 1.45;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.option:hover { border-color: var(--pwc-medium-grey); }
+.option.selected { border-color: var(--pwc-orange); background: var(--pwc-orange-tint); }
+.option input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.option:has(input:focus-visible) { outline: 3px solid var(--pwc-black); outline-offset: 2px; }
+.option-key {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 2px;
+  border: 2px solid var(--pwc-dark-grey); font-weight: 700; font-size: 15px;
+}
+.option.selected .option-key { background: var(--pwc-orange); border-color: var(--pwc-orange); color: var(--pwc-black); }
+.option-text { padding-top: 3px; overflow-wrap: anywhere; }
+
+.nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 30px; }
+.hint { font-size: 13px; color: var(--text-secondary); margin-top: 10px; text-align: right; }
+
+/* ---------- Review ---------- */
+.review-grid {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;
+}
+.review-item {
+  width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 14px; font-family: var(--sans); text-align: left; cursor: pointer;
+  border-radius: var(--radius); background: var(--pwc-white); border: 2px solid #CFCFCF;
+}
+.review-item:hover { border-color: var(--pwc-medium-grey); }
+.review-item.answered { border-color: var(--pwc-orange); background: var(--pwc-orange-tint); }
+.review-item.unanswered { border-style: dashed; }
+.review-num { font-family: var(--serif); font-size: 26px; line-height: 1; color: var(--pwc-black); }
+.review-status { font-size: 13px; color: var(--pwc-dark-grey); }
+.review-item.unanswered .review-status { color: var(--pwc-orange-dark); font-weight: 700; }
+
+/* ---------- Results ---------- */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; }
+.stat { background: var(--pwc-light-grey); border-top: 3px solid var(--pwc-orange); border-radius: var(--radius); padding: 20px; }
+.stat:nth-child(2) { background: var(--pwc-orange-tint); }
+.stat dt { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.stat dd { margin: 6px 0 2px; font-family: var(--serif); font-size: 40px; line-height: 1.1; }
+.stat-note { font-size: 13px; color: var(--text-secondary); }
+
+/* ---------- Answer review ---------- */
+.answer-list { list-style: none; padding: 0; margin: 0; }
+.answer-card { margin-bottom: 18px; }
+.answer-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.answer-q { font-size: 20px; }
+.answer-qtext { font-size: 17px; margin-bottom: 14px; white-space: pre-line; }
+.badge { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 2px; color: var(--pwc-white); white-space: nowrap; }
+.badge-correct { background: var(--success-green); }
+.badge-incorrect { background: var(--error-red); }
+.answer-details { margin: 0 0 14px; display: grid; gap: 8px; }
+.answer-details > div { display: grid; grid-template-columns: 140px 1fr; gap: 12px; }
+.answer-details dt { font-size: 14px; font-weight: 700; }
+.answer-details dd { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+.text-correct { color: var(--success-green); font-weight: 700; }
+.text-incorrect { color: var(--error-red); font-weight: 700; }
+.explanation { background: var(--pwc-peach); border-radius: var(--radius); padding: 14px 16px; }
+.explanation h3 { font-size: 16px; font-family: var(--sans); font-weight: 700; margin-bottom: 4px; }
+.explanation p { font-size: 15px; }
+
+/* ---------- Dialog ---------- */
+.confirm {
+  border: 0; border-top: 4px solid var(--pwc-orange); border-radius: var(--radius);
+  padding: 26px; max-width: 440px; width: calc(100% - 32px); box-shadow: var(--shadow);
+}
+.confirm::backdrop { background: rgba(0, 0, 0, 0.45); }
+.confirm h2 { font-size: 24px; margin-bottom: 10px; }
+.confirm .actions { margin-top: 22px; justify-content: flex-end; }
+
+/* ---------- Footer ---------- */
+.site-footer { border-top: 1px solid var(--pwc-light-grey); padding: 18px 24px; }
+.site-footer p { max-width: 832px; margin: 0 auto; font-size: 13px; color: var(--text-secondary); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 767px) {
+  h1 { font-size: 32px; }
+  .container { padding: 28px 18px 44px; }
+  .site-header, .site-footer { padding-left: 18px; padding-right: 18px; }
+  .q-text { font-size: 22px; }
+  .option { font-size: 16px; padding: 14px; }
+  .review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats { grid-template-columns: 1fr; }
+  .answer-details > div { grid-template-columns: 1fr; gap: 0; }
+  .actions .btn { flex: 1 1 auto; }
+}
+@media (max-width: 360px) {
+  h1 { font-size: 30px; }
+  .container { padding-left: 14px; padding-right: 14px; }
+  .nav .btn { padding-left: 16px; padding-right: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
